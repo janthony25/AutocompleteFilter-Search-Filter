@@ -1,0 +1,109 @@
+﻿@model List<AutocompleteFilter.Models.CarModel>
+
+<h2>Search Car Model</h2>
+
+<!-- Input field for searching car models -->
+<input type="text" id="carModelSearch" placeholder="Search car model..." autocomplete="off" />
+
+<!-- Hidden field to store the selected CarModelId -->
+<input type="hidden" id="selectedCarModelId" name="selectedCarModelId" />
+
+<!-- List to display search suggestions -->
+<ul id="suggestionsList"></ul>
+
+<!-- Include jQuery for handling AJAX requests -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        // Handle input typing event
+        $("#carModelSearch").on("input", function () {
+            var searchTerm = $(this).val();
+            if (searchTerm.length > 0) {
+                $.ajax({
+                    url: '@Url.Action("Search", "CarModel")',  // Call Search action in CarModelController
+                    type: 'GET',
+                    data: { searchTerm: searchTerm },  // Send search term as query parameter
+                    success: function (data) {
+                        $("#suggestionsList").empty();  // Clear the current suggestions
+                        if (data.length > 0) {
+                            // Loop through the returned data and create list items with both ModelName and CarModelId
+                            data.forEach(function (item) {
+                                $("#suggestionsList").append("<li class='suggestion-item' data-id='" + item.carModelId + "'>" + item.modelName + "</li>");
+                            });
+                        } else {
+                            $("#suggestionsList").append("<li>No matches found</li>");
+                        }
+                    },
+                    error: function () {
+                        console.error("Error fetching car models.");
+                    }
+                });
+            } else {
+                $("#suggestionsList").empty(); // Clear suggestions when input is empty
+            }
+        });
+
+        // Handle click event on the suggestion item
+        $(document).on('click', '.suggestion-item', function () {
+            var selectedModelName = $(this).text();  // Get the text (ModelName) of the clicked suggestion
+            var selectedModelId = $(this).data('id');  // Get the CarModelId from the data-id attribute
+
+            // Log the selected values to the console
+            console.log("Selected Model Name: " + selectedModelName);
+            console.log("Selected Model ID: " + selectedModelId);
+
+            // Populate the input field with the clicked ModelName
+            $("#carModelSearch").val(selectedModelName);
+
+            // Store the CarModelId in the hidden field
+            $("#selectedCarModelId").val(selectedModelId);
+
+            // Clear the suggestions list after selection
+            $("#suggestionsList").empty();
+        });
+    });
+</script>
+
+<!-- Add the CSS styling to make the suggestions look like a dropdown -->
+<style>
+    /* Style for the dropdown suggestion list */
+    #suggestionsList {
+        position: absolute;
+        border: 1px solid #ccc;
+        background-color: #fff;
+        max-height: 200px;
+        width: 300px; /* Match the width of the dropdown */
+        overflow-y: auto;
+        list-style-type: none;
+        padding: 0;
+        margin: 0; /* Remove any margin */
+        z-index: 1000; /* Ensure it appears above other content */
+    }
+
+        #suggestionsList li {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+            #suggestionsList li:hover {
+                background-color: #f0f0f0;
+            }
+
+    /* Style the input field */
+    #carModelSearch {
+        width: 300px; /* Match the width of the dropdown */
+        padding: 10px;
+        box-sizing: border-box;
+        border: 1px solid #ccc; /* Custom border color */
+        outline: none; /* Remove the focus outline */
+        box-shadow: none; /* Remove any box shadow */
+    }
+
+        /* Optional focus style */
+        #carModelSearch:focus {
+            border: 1px solid #000; /* Darker border on focus */
+            border-bottom: none; /* Remove the bottom border */
+            box-shadow: none; /* Ensure no box-shadow is applied */
+        }
+</style>
